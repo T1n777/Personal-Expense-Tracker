@@ -3,13 +3,14 @@ from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 import json
 import os
+from datetime import date
 
 # ---------- Load Existing Expenses ----------
 def load_expenses(filename="expenses.json"):
     try:
         with open(filename, "r") as f:
             return json.load(f)
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError):
         return []
 
 expenses = load_expenses()
@@ -21,37 +22,33 @@ categories = ["Food", "Transport", "Entertainment", "Bills", "Shopping"]
 
 def save_expenses():
     with open("expenses.json", "w") as f:
-        json.dump(expenses, f)
+        json.dump(expenses, f, indent=4)
 
 def add_expense():
     try:
         amount = float(amount_entry.get())
-        category = category_var.get().strip().capitalize()  
-        date = date_entry.get()
+        category = category_var.get().strip().capitalize()
+        date_val = date_entry.get()
         
-        if not category or not date or category == "":
+        if not category or not date_val:
             messagebox.showerror("Error", "Category and Date cannot be empty.")
             return
         
+        expenses.append({"amount": amount, "category": category, "date": date_val})
         
-        expenses.append({"amount": amount, "category": category, "date": date})
-        
-        
-        if category not in categories and category != "":
+        if category not in categories:
             categories.append(category)
             category_combobox['values'] = categories
         
-        save_expenses()  
-        
+        save_expenses()
         messagebox.showinfo("Success", "Expense added successfully!")
-        
         
         amount_entry.delete(0, tk.END)
         category_combobox.set("")
-        date_entry.set_date("")
+        date_entry.set_date(date.today())
         
     except ValueError:
-        messagebox.showerror("Error", "Amount must be a number.")
+        messagebox.showerror("Error", "Please enter a valid number for amount.")
 
 def show_total():
     total = sum(e["amount"] for e in expenses)
@@ -72,9 +69,9 @@ def show_by_category():
 
 def clear_data():
     if messagebox.askyesno("Confirm", "Are you sure you want to clear all expenses?"):
-        expenses.clear()  
+        expenses.clear()
         if os.path.exists("expenses.json"):
-            os.remove("expenses.json")  
+            os.remove("expenses.json")
         messagebox.showinfo("Cleared", "All expense data has been cleared!")
 
 # ---------- GUI Setup ----------
@@ -87,7 +84,7 @@ tk.Label(root, text="Amount (₹):").pack()
 amount_entry = tk.Entry(root)
 amount_entry.pack()
 
-# Category Input (Dropdown + typing)
+# Category Input
 tk.Label(root, text="Category:").pack()
 category_var = tk.StringVar()
 category_combobox = ttk.Combobox(root, textvariable=category_var)
@@ -95,7 +92,7 @@ category_combobox['values'] = categories
 category_combobox.pack()
 category_combobox.set("")
 
-# Date Input (Calendar)
+# Date Input
 tk.Label(root, text="Date:").pack()
 date_entry = DateEntry(root, date_pattern='yyyy-mm-dd')
 date_entry.pack()
@@ -108,4 +105,3 @@ tk.Button(root, text="Clear All Data", fg="white", bg="red", command=clear_data)
 tk.Button(root, text="Save & Exit", command=lambda: [save_expenses(), root.destroy()]).pack(pady=5)
 
 root.mainloop()
-
