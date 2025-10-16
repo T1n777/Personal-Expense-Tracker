@@ -105,4 +105,3 @@ tk.Button(root, text="Clear All Data", fg="white", bg="red", command=clear_data)
 tk.Button(root, text="Save & Exit", command=lambda: [save_expenses(), root.destroy()]).pack(pady=5)
 
 root.mainloop()
-
